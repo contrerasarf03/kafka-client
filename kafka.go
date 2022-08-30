@@ -109,9 +109,9 @@ func (k *Kafka) Subscribe(topic string, handler MessageHandler) (chan interface{
 	var subEndedChan chan interface{}
 	failOnError := k.config.FailOnError
 	if k.config.AsyncSubscription {
-		endSubChan, subEndedChan = sync.ParallelTask(k.config.AsyncRoutines, 0, failOnError, subscribeTask(consumer, handler))
+		endSubChan, subEndedChan = sync.ParallelTask(k.config.AsyncRoutines, 0, failOnError, subscribeTask(consumer, handler, topic))
 	} else {
-		endSubChan, subEndedChan = sync.LinearTask(0, failOnError, subscribeTask(consumer, handler))
+		endSubChan, subEndedChan = sync.LinearTask(0, failOnError, subscribeTask(consumer, handler, topic))
 	}
 	go func() {
 		<-subEndedChan
@@ -122,8 +122,15 @@ func (k *Kafka) Subscribe(topic string, handler MessageHandler) (chan interface{
 	return endSubChan, nil
 }
 
-func subscribeTask(reader *kafka.Consumer, handler MessageHandler) func() error {
+func subscribeTask(reader *kafka.Consumer, handler MessageHandler, topic string) func() error {
 	return func() error {
+		err := reader.Subscribe(topic, nil)
+		if err != nil {
+			logrus.Error("Failed to subscribe to topic: ", err.Error())
+		} else {
+			logrus.Info("Subscribed to topic: " + topic)
+		}
+
 		message, err := reader.ReadMessage(-1)
 		if err != nil {
 			log.WithError(err).Warn("unable to read from Kafka, the reader might have been closed, the subscription will end")
