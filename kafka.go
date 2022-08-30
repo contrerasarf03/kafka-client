@@ -57,7 +57,7 @@ func (k *Kafka) Publish(topic string, message string) (string, error) {
 
 	logrus.Info("Create new producer instance: ", map[string]interface{}{
 		"brokers": k.config.Brokers,
-		"topic":   k.config.Topic,
+		"topic":   topic,
 	})
 
 	writer, err := kafka.NewProducer(conf)
@@ -72,7 +72,7 @@ func (k *Kafka) Publish(topic string, message string) (string, error) {
 
 	err = writer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{
-			Topic:     &k.config.Topic,
+			Topic:     &topic,
 			Partition: kafka.PartitionAny,
 		},
 		Value: []byte(message),
@@ -97,7 +97,7 @@ func (k *Kafka) Subscribe(topic string, handler MessageHandler) (chan interface{
 
 	logrus.Info("Create new consumer instance: ", map[string]interface{}{
 		"brokers": k.config.Brokers,
-		"topic":   k.config.Topic,
+		"topic":   topic,
 		"groupID": k.config.GroupID,
 	})
 	consumer, err := kafka.NewConsumer(conf)
