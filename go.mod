@@ -1,4 +1,4 @@
-module github.com/contrerasarf03/kafka-client.git
+module github.com/contrerasarf03/kafka-client
 
 go 1.18
 
