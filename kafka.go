@@ -36,6 +36,12 @@ type (
 		// AsyncRoutines sets max number of works that will handle the messages
 		AsyncRoutines int
 
+		// APIKey is a unique identifier that authenticates the request
+		APIKey string
+
+		// APISecret is used for authentication
+		APISecret string
+
 		// FailOnError ensures that on an error, messages will not be committed
 		FailOnError bool
 	}
