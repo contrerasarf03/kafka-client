@@ -8,7 +8,7 @@ import (
 )
 
 const (
-	securityProtocol = "SASL_PLAIN"
+	securityProtocol = "SASL_SSL"
 	saslMechanism    = "PLAIN"
 )
 
