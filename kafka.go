@@ -49,34 +49,34 @@ type (
 	// Kafka is a concrete implementation of the Bus that uses Kafka as the backend service.
 	Kafka struct {
 		config *KafkaConfig
+		writer *kafka.Producer
 	}
 )
 
 // NewKafka returns a new instance of the Kafka Message Bus implementation
 func NewKafka(config *KafkaConfig) Bus {
-	return &Kafka{config}
+	k := &Kafka{config: config}
+	conf, _ := k.FormatConfig()
+	writer, err := kafka.NewProducer(conf)
+	if err != nil {
+		logrus.Error("Failed to create new producer instance: ", err.Error())
+	}
+
+	k.writer = writer
+	return k
 }
 
 // Publish sends topic messages to Kafka
 func (k *Kafka) Publish(topic string, message string) (string, error) {
-	conf, _ := k.FormatConfig()
 
 	logrus.Info("Create new producer instance: ", map[string]interface{}{
 		"brokers": k.config.Brokers,
 		"topic":   topic,
 	})
 
-	writer, err := kafka.NewProducer(conf)
-	if err != nil {
-		logrus.Error("Failed to create new producer instance: ", err.Error())
-		return "", err
-	}
-
-	defer writer.Close()
-
 	logrus.Info("Publish kafka message: ", message)
 
-	err = writer.Produce(&kafka.Message{
+	err := k.writer.Produce(&kafka.Message{
 		TopicPartition: kafka.TopicPartition{
 			Topic:     &topic,
 			Partition: kafka.PartitionAny,
@@ -159,4 +159,8 @@ func handleMessage(reader *kafka.Consumer, message *kafka.Message, handler Messa
 		return err
 	}
 	return nil
+}
+
+func (k *Kafka) Close() {
+	k.writer.Close()
 }
